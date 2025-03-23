@@ -45,6 +45,12 @@
     <input type="number" name="parcelas" id="parcelas" class="form-control" value="1" min="1" required>
   </div>
 
+  <!-- NOVO CAMPO: DESCRIÇÃO -->
+  <div class="mb-3">
+    <label for="descricao">Descrição</label>
+    <textarea name="descricao" id="descricao" class="form-control" rows="2" placeholder="Ex: Mercado, gasolina, entrega..."></textarea>
+  </div>
+
   <button type="submit" class="btn btn-success">Registrar</button>
 </form>
 
@@ -55,13 +61,10 @@ function toggleCartao(value) {
 
 function validarFormulario() {
   const categoria = document.getElementById('categoria').value;
-  const cartaoSelect = document.getElementById('cartao');
-
-  if (categoria === 'Cartao') {
-    if (!cartaoSelect.value) {
-      alert('Por favor, selecione o cartão usado na compra.');
-      return false;
-    }
+  const cartao = document.getElementById('cartao');
+  if (categoria === 'Cartao' && !cartao.value) {
+    alert('Por favor, selecione o cartão usado na compra.');
+    return false;
   }
   return true;
 }

@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Detalhamento de Gastos — {{ mes }}/{{ ano }}</h2>
+
+<a href="/analise" class="btn btn-secondary mb-3">⬅ Voltar</a>
+
+<table class="table table-bordered">
+  <thead>
+    <tr>
+      <th>Data</th>
+      <th>Tipo</th>
+      <th>Valor</th>
+      <th>Categoria</th>
+      <th>Cartão</th>
+      <th>Parcela</th>
+      <th>Descrição</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for g in gastos %}
+    <tr>
+      <td>{{ g.data.strftime('%d/%m/%Y') }}</td>
+      <td>{{ g.tipo.nome }}</td>
+      <td>R$ {{ '%.2f'|format(g.valor) }}</td>
+      <td>{{ g.categoria }}</td>
+      <td>
+        {% if g.cartao %}
+          {{ g.cartao.nome }} ({{ g.cartao.bandeira }})
+        {% endif %}
+      </td>
+      <td>{{ g.parcela }}/{{ g.total_parcelas }}</td>
+      <td>{{ g.descricao }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
