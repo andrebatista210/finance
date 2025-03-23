@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect
-from models import db, Cartao, TipoGasto, Gasto
-from datetime import datetime
+from models import db, Cartao, TipoGasto, Gasto, Receita
+from datetime import datetime, date
 from dateutil.relativedelta import relativedelta
 from sqlalchemy import extract, func
 
@@ -12,11 +12,15 @@ db.init_app(app)
 with app.app_context():
     db.create_all()
 
-# Página inicial com análise de gastos
 @app.route('/', methods=['GET', 'POST'])
 def analise():
     cartoes = Cartao.query.all()
     tipos = TipoGasto.query.all()
+
+    hoje = date.today()
+    mes_filtro = int(request.form.get('mes', hoje.month))
+    ano_filtro = int(request.form.get('ano', hoje.year))
+
     filtro_categoria = request.form.get('categoria', 'Todos')
     filtro_cartao_id = request.form.get('cartao_id', '')
 
@@ -29,9 +33,11 @@ def analise():
             query = query.filter(Gasto.cartao_id == int(filtro_cartao_id))
 
     gastos_filtrados = query.all()
-    total_gastos = sum(g.valor for g in gastos_filtrados)
+    # Considerar apenas gastos do mês atual em diante (dívidas futuras ou atuais)
+    gastos_futuros = [g for g in gastos_filtrados if g.data_fatura >= date(ano_filtro, mes_filtro, 1)]
+    total_gastos = sum(g.valor for g in gastos_futuros)
 
-    # Agrupamento por mês (usando data_fatura!)
+    # GASTOS POR MÊS (para gráfico)
     gastos_por_mes_query = db.session.query(
         extract('year', Gasto.data_fatura).label('ano'),
         extract('month', Gasto.data_fatura).label('mes'),
@@ -39,32 +45,69 @@ def analise():
     ).filter(Gasto.id.in_([g.id for g in gastos_filtrados])
     ).group_by('ano', 'mes').all()
 
-    gastos_por_mes = [
-        {'ano': int(row.ano), 'mes': int(row.mes), 'total': float(row.total)}
-        for row in gastos_por_mes_query
-    ]
+    gastos_por_mes = [{'ano': int(row.ano), 'mes': int(row.mes), 'total': float(row.total)} for row in gastos_por_mes_query]
 
-    # Agrupamento por tipo
+    # RECEITAS POR MÊS (para gráfico)
+    receitas_por_mes_query = db.session.query(
+        extract('year', Receita.data).label('ano'),
+        extract('month', Receita.data).label('mes'),
+        func.sum(Receita.valor).label('total')
+    ).group_by('ano', 'mes').all()
+
+    receitas_por_mes = [{'ano': int(row.ano), 'mes': int(row.mes), 'total': float(row.total)} for row in receitas_por_mes_query]
+
+    # GASTOS POR TIPO
     gastos_por_tipo_query = db.session.query(
         TipoGasto.nome,
         func.sum(Gasto.valor)
     ).join(TipoGasto).filter(Gasto.id.in_([g.id for g in gastos_filtrados])
     ).group_by(TipoGasto.nome).all()
 
-    gastos_por_tipo = [
-        {'tipo': row[0], 'total': float(row[1])}
-        for row in gastos_por_tipo_query
-    ]
+    gastos_por_tipo = [{'tipo': row[0], 'total': float(row[1])} for row in gastos_por_tipo_query]
+
+    # FILTRADO DO MÊS ATUAL (respeitando filtros)
+    gastos_filtrados_mes = query.filter(
+        extract('year', Gasto.data_fatura) == ano_filtro,
+        extract('month', Gasto.data_fatura) == mes_filtro
+    ).all()
+    total_filtrado_mes = sum(g.valor for g in gastos_filtrados_mes)
+
+    # TOTAIS DO MÊS ATUAL (independente de filtro)
+    gastos_do_mes = db.session.query(func.sum(Gasto.valor)).filter(
+        extract('year', Gasto.data_fatura) == ano_filtro,
+        extract('month', Gasto.data_fatura) == mes_filtro
+    ).scalar() or 0
+
+    receitas_do_mes = db.session.query(func.sum(Receita.valor)).filter(
+        extract('year', Receita.data) == ano_filtro,
+        extract('month', Receita.data) == mes_filtro
+    ).scalar() or 0
+
+    saldo_mes = receitas_do_mes - gastos_do_mes
+
+    # ANOS DISPONÍVEIS
+    anos_gastos = db.session.query(extract('year', Gasto.data_fatura)).distinct()
+    anos_receitas = db.session.query(extract('year', Receita.data)).distinct()
+    anos_disponiveis = sorted(set([int(a[0]) for a in anos_gastos.union(anos_receitas)]))
 
     return render_template('analise.html',
-                           gastos=gastos_filtrados,
-                           cartoes=cartoes,
-                           tipos=tipos,
-                           filtro_categoria=filtro_categoria,
-                           filtro_cartao_id=filtro_cartao_id,
-                           gastos_por_mes=gastos_por_mes,
-                           gastos_por_tipo=gastos_por_tipo,
-                           total_gastos=total_gastos)
+        gastos=gastos_filtrados,
+        cartoes=cartoes,
+        tipos=tipos,
+        filtro_categoria=filtro_categoria,
+        filtro_cartao_id=filtro_cartao_id,
+        gastos_por_mes=gastos_por_mes,
+        gastos_por_tipo=gastos_por_tipo,
+        receitas_por_mes=receitas_por_mes,
+        total_gastos=total_gastos,
+        total_filtrado_mes=total_filtrado_mes,
+        receitas_do_mes=receitas_do_mes,
+        gastos_do_mes=gastos_do_mes,
+        saldo_mes=saldo_mes,
+        mes_selecionado=mes_filtro,
+        ano_selecionado=ano_filtro,
+        anos_disponiveis=anos_disponiveis
+    )
 
 # Lista geral dos gastos
 @app.route('/gastos')
@@ -99,8 +142,8 @@ def novo_gasto():
                 valor=valor_parcela,
                 categoria=categoria,
                 cartao_id=cartao_id,
-                data=data_parcela,           # data real da compra
-                data_fatura=data_fatura,     # usada na análise mensal
+                data=data_parcela,
+                data_fatura=data_fatura,
                 parcela=i + 1,
                 total_parcelas=parcelas,
                 descricao=descricao
@@ -138,7 +181,7 @@ def editar_gasto(id):
         gasto.total_parcelas = int(request.form.get('total_parcelas', 1))
         gasto.descricao = request.form.get('descricao')
         gasto.cartao_id = int(request.form['cartao']) if gasto.categoria == 'Cartao' else None
-        gasto.data_fatura = gasto.data  # ajuste manual se quiser permitir isso depois
+        gasto.data_fatura = gasto.data
 
         db.session.commit()
         return redirect('/gastos')
@@ -152,6 +195,18 @@ def deletar_gasto(id):
     db.session.delete(gasto)
     db.session.commit()
     return redirect('/gastos')
+
+# Cadastrar receita
+@app.route('/nova-receita', methods=['GET', 'POST'])
+def nova_receita():
+    if request.method == 'POST':
+        valor = float(request.form['valor'])
+        descricao = request.form.get('descricao')
+        data = datetime.strptime(request.form['data'], '%Y-%m-%d')
+        db.session.add(Receita(valor=valor, descricao=descricao, data=data))
+        db.session.commit()
+        return redirect('/')
+    return render_template('nova_receita.html')
 
 # Cadastrar cartão
 @app.route('/cadastrar-cartao', methods=['GET', 'POST'])
@@ -185,7 +240,6 @@ def deletar_cartao(id):
     db.session.commit()
     return redirect('/cadastrar-cartao')
 
-
 # Cadastrar tipo de gasto
 @app.route('/cadastrar-tipo', methods=['GET', 'POST'])
 def cadastrar_tipo():
@@ -213,7 +267,6 @@ def deletar_tipo(id):
     db.session.delete(tipo)
     db.session.commit()
     return redirect('/cadastrar-tipo')
-
 
 # Rodar app
 if __name__ == '__main__':

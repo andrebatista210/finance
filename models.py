@@ -27,3 +27,9 @@ class Gasto(db.Model):
     tipo = db.relationship('TipoGasto')
     cartao = db.relationship('Cartao')
 
+class Receita(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    valor = db.Column(db.Float, nullable=False)
+    descricao = db.Column(db.String(255))
+    data = db.Column(db.Date, nullable=False)
+

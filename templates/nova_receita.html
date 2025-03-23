@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Nova Receita</h2>
+
+<form method="post">
+  <div class="mb-3">
+    <label>Valor</label>
+    <input type="number" name="valor" step="0.01" class="form-control" required>
+  </div>
+
+  <div class="mb-3">
+    <label>Data</label>
+    <input type="date" name="data" class="form-control" required>
+  </div>
+
+  <div class="mb-3">
+    <label>Descrição</label>
+    <textarea name="descricao" class="form-control" rows="2"></textarea>
+  </div>
+
+  <button type="submit" class="btn btn-success">Salvar Receita</button>
+</form>
+{% endblock %}
