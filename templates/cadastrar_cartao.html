@@ -28,12 +28,14 @@
 
 <!-- Lista de cartões cadastrados -->
 <h4>Cartões já cadastrados</h4>
+
 <table class="table table-striped">
   <thead>
     <tr>
       <th>Nome</th>
       <th>Bandeira</th>
       <th>Limite (R$)</th>
+      <th>Ações</th>
     </tr>
   </thead>
   <tbody>
@@ -42,6 +44,12 @@
       <td>{{ cartao.nome }}</td>
       <td>{{ cartao.bandeira }}</td>
       <td>R$ {{ '%.2f'|format(cartao.limite) }}</td>
+      <td>
+        <a href="/editar-cartao/{{ cartao.id }}" class="btn btn-sm btn-warning">Editar</a>
+        <form action="/deletar-cartao/{{ cartao.id }}" method="post" style="display:inline;" onsubmit="return confirm('Deseja excluir este cartão?');">
+          <button class="btn btn-sm btn-danger" type="submit">Excluir</button>
+        </form>
+      </td>
     </tr>
     {% endfor %}
   </tbody>

@@ -167,6 +167,25 @@ def cadastrar_cartao():
     cartoes = Cartao.query.order_by(Cartao.nome).all()
     return render_template('cadastrar_cartao.html', cartoes=cartoes)
 
+@app.route('/editar-cartao/<int:id>', methods=['GET', 'POST'])
+def editar_cartao(id):
+    cartao = Cartao.query.get_or_404(id)
+    if request.method == 'POST':
+        cartao.nome = request.form['nome']
+        cartao.bandeira = request.form['bandeira']
+        cartao.limite = float(request.form['limite'])
+        db.session.commit()
+        return redirect('/cadastrar-cartao')
+    return render_template('editar_cartao.html', cartao=cartao)
+
+@app.route('/deletar-cartao/<int:id>', methods=['POST'])
+def deletar_cartao(id):
+    cartao = Cartao.query.get_or_404(id)
+    db.session.delete(cartao)
+    db.session.commit()
+    return redirect('/cadastrar-cartao')
+
+
 # Cadastrar tipo de gasto
 @app.route('/cadastrar-tipo', methods=['GET', 'POST'])
 def cadastrar_tipo():
@@ -178,6 +197,23 @@ def cadastrar_tipo():
 
     tipos = TipoGasto.query.order_by(TipoGasto.nome).all()
     return render_template('cadastrar_tipo.html', tipos=tipos)
+
+@app.route('/editar-tipo/<int:id>', methods=['GET', 'POST'])
+def editar_tipo(id):
+    tipo = TipoGasto.query.get_or_404(id)
+    if request.method == 'POST':
+        tipo.nome = request.form['nome']
+        db.session.commit()
+        return redirect('/cadastrar-tipo')
+    return render_template('editar_tipo.html', tipo=tipo)
+
+@app.route('/deletar-tipo/<int:id>', methods=['POST'])
+def deletar_tipo(id):
+    tipo = TipoGasto.query.get_or_404(id)
+    db.session.delete(tipo)
+    db.session.commit()
+    return redirect('/cadastrar-tipo')
+
 
 # Rodar app
 if __name__ == '__main__':

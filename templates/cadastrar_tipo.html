@@ -10,11 +10,20 @@
   <button type="submit" class="btn btn-primary">Cadastrar Tipo</button>
 </form>
 
-<!-- Lista de tipos de gasto -->
+<!-- Lista de tipos cadastrados -->
 <h4>Tipos já cadastrados</h4>
+
 <ul class="list-group">
   {% for tipo in tipos %}
-  <li class="list-group-item">{{ tipo.nome }}</li>
+  <li class="list-group-item d-flex justify-content-between align-items-center">
+    {{ tipo.nome }}
+    <span>
+      <a href="/editar-tipo/{{ tipo.id }}" class="btn btn-sm btn-warning">Editar</a>
+      <form method="post" action="/deletar-tipo/{{ tipo.id }}" style="display:inline;" onsubmit="return confirm('Excluir este tipo?');">
+        <button class="btn btn-sm btn-danger">Excluir</button>
+      </form>
+    </span>
+  </li>
   {% endfor %}
 </ul>
 {% endblock %}

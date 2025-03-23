@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Editar Tipo de Gasto</h2>
+
+<form method="post">
+  <div class="mb-3">
+    <label>Nome</label>
+    <input type="text" name="nome" class="form-control" value="{{ tipo.nome }}" required>
+  </div>
+  <button class="btn btn-primary" type="submit">Salvar</button>
+  <a href="/cadastrar-tipo" class="btn btn-secondary">Cancelar</a>
+</form>
+{% endblock %}
