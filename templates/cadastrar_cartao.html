@@ -1,22 +1,49 @@
 {% extends 'base.html' %}
 {% block content %}
-<h2>Cadastrar Cartão</h2>
-<form method="post">
+<h2>Cadastro de Cartão</h2>
+
+<form method="post" class="mb-4">
   <div class="mb-3">
     <label>Nome do Cartão</label>
     <input type="text" name="nome" class="form-control" required>
   </div>
+
   <div class="mb-3">
     <label>Bandeira</label>
-    <select name="bandeira" class="form-control">
-      <option>Visa</option>
-      <option>Mastercard</option>
+    <select name="bandeira" class="form-control" required>
+      <option value="Visa">Visa</option>
+      <option value="Mastercard">Mastercard</option>
+      <option value="Elo">Elo</option>
+      <option value="Outros">Outros</option>
     </select>
   </div>
+
   <div class="mb-3">
     <label>Limite</label>
     <input type="number" step="0.01" name="limite" class="form-control" required>
   </div>
-  <button type="submit" class="btn btn-primary">Salvar</button>
+
+  <button type="submit" class="btn btn-primary">Cadastrar Cartão</button>
 </form>
+
+<!-- Lista de cartões cadastrados -->
+<h4>Cartões já cadastrados</h4>
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>Nome</th>
+      <th>Bandeira</th>
+      <th>Limite (R$)</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for cartao in cartoes %}
+    <tr>
+      <td>{{ cartao.nome }}</td>
+      <td>{{ cartao.bandeira }}</td>
+      <td>R$ {{ '%.2f'|format(cartao.limite) }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
 {% endblock %}

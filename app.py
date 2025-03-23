@@ -4,78 +4,17 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from sqlalchemy import extract, func
 
-# ✅ CRIAÇÃO DO APP DEVE VIR ANTES DAS ROTAS
+# Configuração principal
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite3'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
 db.init_app(app)
 
 with app.app_context():
     db.create_all()
 
-# 🏠 Página inicial com lista de gastos
-@app.route('/')
-def index():
-    gastos = Gasto.query.order_by(Gasto.data.desc()).all()
-    return render_template('index.html', gastos=gastos)
-
-# 💳 Cadastro de Cartões
-@app.route('/cadastrar-cartao', methods=['GET', 'POST'])
-def cadastrar_cartao():
-    if request.method == 'POST':
-        nome = request.form['nome']
-        bandeira = request.form['bandeira']
-        limite = float(request.form['limite'])
-        db.session.add(Cartao(nome=nome, bandeira=bandeira, limite=limite))
-        db.session.commit()
-        return redirect('/')
-    return render_template('cadastrar_cartao.html')
-
-# 🏷 Cadastro de Tipos de Gasto
-@app.route('/cadastrar-tipo', methods=['GET', 'POST'])
-def cadastrar_tipo():
-    if request.method == 'POST':
-        nome = request.form['nome']
-        db.session.add(TipoGasto(nome=nome))
-        db.session.commit()
-        return redirect('/')
-    return render_template('cadastrar_tipo.html')
-
-# ➕ Cadastro de novo gasto
-@app.route('/novo-gasto', methods=['GET', 'POST'])
-def novo_gasto():
-    cartoes = Cartao.query.all()
-    tipos = TipoGasto.query.all()
-    if request.method == 'POST':
-        tipo_id = int(request.form['tipo'])
-        valor = float(request.form['valor'])
-        categoria = request.form['categoria']
-        data = datetime.strptime(request.form['data'], '%Y-%m-%d')
-        parcelas = int(request.form.get('parcelas', 1))
-        descricao = request.form.get('descricao')  # 🆕 NOVO CAMPO
-        cartao_id = int(request.form['cartao']) if categoria == 'Cartao' else None
-
-        valor_parcela = valor / parcelas
-        for i in range(parcelas):
-            data_parcela = data + relativedelta(months=i)
-            gasto = Gasto(
-                tipo_id=tipo_id,
-                valor=valor_parcela,
-                categoria=categoria,
-                cartao_id=cartao_id,
-                data=data_parcela,
-                parcela=i + 1,
-                total_parcelas=parcelas,
-                descricao=descricao  # 🆕
-            )
-            db.session.add(gasto)
-        db.session.commit()
-        return redirect('/')
-    return render_template('novo_gasto.html', cartoes=cartoes, tipos=tipos)
-
-# 📊 Página de análise com gráficos
-@app.route('/analise', methods=['GET', 'POST'])
+# ✅ PÁGINA INICIAL: ANÁLISE COM GRÁFICOS
+@app.route('/', methods=['GET', 'POST'])
 def analise():
     cartoes = Cartao.query.all()
     tipos = TipoGasto.query.all()
@@ -91,8 +30,9 @@ def analise():
             query = query.filter(Gasto.cartao_id == int(filtro_cartao_id))
 
     gastos_filtrados = query.all()
+    total_gastos = sum(g.valor for g in gastos_filtrados)
 
-    # 📅 Gráfico por mês
+    # Gráfico por mês
     gastos_por_mes_query = db.session.query(
         extract('year', Gasto.data).label('ano'),
         extract('month', Gasto.data).label('mes'),
@@ -105,7 +45,7 @@ def analise():
         for row in gastos_por_mes_query
     ]
 
-    # 🏷 Gráfico por tipo de gasto
+    # Gráfico por tipo
     gastos_por_tipo_query = db.session.query(
         TipoGasto.nome,
         func.sum(Gasto.valor)
@@ -124,9 +64,48 @@ def analise():
                            filtro_categoria=filtro_categoria,
                            filtro_cartao_id=filtro_cartao_id,
                            gastos_por_mes=gastos_por_mes,
-                           gastos_por_tipo=gastos_por_tipo)
+                           gastos_por_tipo=gastos_por_tipo,
+                           total_gastos=total_gastos)
 
-# 🔍 Página de detalhamento por mês
+# ✅ LISTA COMPLETA DE GASTOS
+@app.route('/gastos')
+def gastos():
+    gastos = Gasto.query.order_by(Gasto.data.desc()).all()
+    return render_template('gastos.html', gastos=gastos)
+
+# ✅ CADASTRAR NOVO GASTO
+@app.route('/novo-gasto', methods=['GET', 'POST'])
+def novo_gasto():
+    cartoes = Cartao.query.all()
+    tipos = TipoGasto.query.all()
+    if request.method == 'POST':
+        tipo_id = int(request.form['tipo'])
+        valor = float(request.form['valor'])
+        categoria = request.form['categoria']
+        data = datetime.strptime(request.form['data'], '%Y-%m-%d')
+        parcelas = int(request.form.get('parcelas', 1))
+        descricao = request.form.get('descricao')
+        cartao_id = int(request.form['cartao']) if categoria == 'Cartao' else None
+
+        valor_parcela = valor / parcelas
+        for i in range(parcelas):
+            data_parcela = data + relativedelta(months=i)
+            gasto = Gasto(
+                tipo_id=tipo_id,
+                valor=valor_parcela,
+                categoria=categoria,
+                cartao_id=cartao_id,
+                data=data_parcela,
+                parcela=i + 1,
+                total_parcelas=parcelas,
+                descricao=descricao
+            )
+            db.session.add(gasto)
+        db.session.commit()
+        return redirect('/')
+    return render_template('novo_gasto.html', cartoes=cartoes, tipos=tipos)
+
+# ✅ DETALHAMENTO POR MÊS (clicável no gráfico)
 @app.route('/detalhes')
 def detalhes_mes():
     ano = int(request.args.get('ano'))
@@ -137,6 +116,64 @@ def detalhes_mes():
     ).order_by(Gasto.data.asc()).all()
     return render_template('detalhes_mes.html', gastos=gastos, ano=ano, mes=mes)
 
-# ▶️ Execução do servidor
+# ✅ EDITAR GASTO
+@app.route('/editar/<int:id>', methods=['GET', 'POST'])
+def editar_gasto(id):
+    gasto = Gasto.query.get_or_404(id)
+    cartoes = Cartao.query.all()
+    tipos = TipoGasto.query.all()
+
+    if request.method == 'POST':
+        gasto.tipo_id = int(request.form['tipo'])
+        gasto.valor = float(request.form['valor'])
+        gasto.categoria = request.form['categoria']
+        gasto.data = datetime.strptime(request.form['data'], '%Y-%m-%d')
+        gasto.parcela = int(request.form.get('parcela', 1))
+        gasto.total_parcelas = int(request.form.get('total_parcelas', 1))
+        gasto.descricao = request.form.get('descricao')
+        gasto.cartao_id = int(request.form['cartao']) if gasto.categoria == 'Cartao' else None
+
+        db.session.commit()
+        return redirect('/gastos')
+
+    return render_template('editar_gasto.html', gasto=gasto, cartoes=cartoes, tipos=tipos)
+
+# ✅ DELETAR GASTO
+@app.route('/deletar/<int:id>', methods=['POST'])
+def deletar_gasto(id):
+    gasto = Gasto.query.get_or_404(id)
+    db.session.delete(gasto)
+    db.session.commit()
+    return redirect('/gastos')
+
+# ✅ CADASTRAR CARTÃO
+@app.route('/cadastrar-cartao', methods=['GET', 'POST'])
+def cadastrar_cartao():
+    if request.method == 'POST':
+        nome = request.form['nome']
+        bandeira = request.form['bandeira']
+        limite = float(request.form['limite'])
+        db.session.add(Cartao(nome=nome, bandeira=bandeira, limite=limite))
+        db.session.commit()
+        return redirect('/cadastrar-cartao')
+
+    cartoes = Cartao.query.order_by(Cartao.nome).all()
+    return render_template('cadastrar_cartao.html', cartoes=cartoes)
+
+
+# ✅ CADASTRAR TIPO DE GASTO
+@app.route('/cadastrar-tipo', methods=['GET', 'POST'])
+def cadastrar_tipo():
+    if request.method == 'POST':
+        nome = request.form['nome']
+        db.session.add(TipoGasto(nome=nome))
+        db.session.commit()
+        return redirect('/cadastrar-tipo')
+
+    tipos = TipoGasto.query.order_by(TipoGasto.nome).all()
+    return render_template('cadastrar_tipo.html', tipos=tipos)
+
+
+# ✅ INICIAR APP
 if __name__ == '__main__':
     app.run(debug=True)

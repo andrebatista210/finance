@@ -1,10 +1,8 @@
 {% extends 'base.html' %}
 {% block content %}
-<h2>Detalhamento de Gastos — {{ mes }}/{{ ano }}</h2>
+<h2>Todos os Gastos</h2>
 
-<a href="/" class="btn btn-secondary mb-3">⬅ Voltar</a>
-
-<table class="table table-bordered table-striped">
+<table class="table table-striped">
   <thead>
     <tr>
       <th>Data</th>
@@ -14,7 +12,6 @@
       <th>Cartão</th>
       <th>Parcela</th>
       <th>Descrição</th>
-      <th>Ações</th>
     </tr>
   </thead>
   <tbody>
@@ -31,12 +28,6 @@
       </td>
       <td>{{ g.parcela }}/{{ g.total_parcelas }}</td>
       <td>{{ g.descricao or '' }}</td>
-      <td>
-        <a href="/editar/{{ g.id }}" class="btn btn-sm btn-warning">Editar</a>
-        <form method="post" action="/deletar/{{ g.id }}" style="display:inline;" onsubmit="return confirm('Deseja realmente excluir este gasto?');">
-          <button type="submit" class="btn btn-sm btn-danger">Excluir</button>
-        </form>
-      </td>
     </tr>
     {% endfor %}
   </tbody>

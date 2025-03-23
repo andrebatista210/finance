@@ -2,6 +2,7 @@
 {% block content %}
 <h2>Análise de Gastos</h2>
 
+<!-- Filtros -->
 <form method="post" class="row g-3 mb-4">
   <div class="col-md-4">
     <label>Categoria</label>
@@ -13,9 +14,9 @@
   </div>
 
   <div class="col-md-4">
-    <label>Cartão</label>
+    <label>Cartão (opcional)</label>
     <select name="cartao_id" class="form-control" onchange="this.form.submit()">
-      <option value="">Todos</option>
+      <option value="">Todos os Cartões</option>
       {% for cartao in cartoes %}
       <option value="{{ cartao.id }}" {% if filtro_cartao_id|int == cartao.id %}selected{% endif %}>
         {{ cartao.nome }} ({{ cartao.bandeira }})
@@ -25,72 +26,82 @@
   </div>
 </form>
 
+<!-- Total numérico -->
+<div class="alert alert-info text-center fw-bold">
+  Total filtrado: R$ {{ '%.2f'|format(total_gastos) }}
+</div>
+
+<!-- Gráficos -->
 <div class="row">
-  <div class="col-md-6">
+  <div class="col-md-6 mb-4">
     <h5>Gastos por Mês</h5>
     <canvas id="graficoMes"></canvas>
   </div>
-  <div class="col-md-6">
+  <div class="col-md-6 mb-4">
     <h5>Gastos por Tipo</h5>
     <canvas id="graficoTipo"></canvas>
   </div>
 </div>
 
+<!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-const dadosPorMes = {{ gastos_por_mes | tojson }};
-const labelsMes = dadosPorMes.map(item => `${item.ano}-${String(item.mes).padStart(2, '0')}`);
-const valoresMes = dadosPorMes.map(item => item.total);
-const anoMesArray = dadosPorMes.map(item => ({ ano: item.ano, mes: item.mes }));
+  const dadosPorMes = {{ gastos_por_mes | tojson }};
+  const labelsMes = dadosPorMes.map(item => `${item.ano}-${String(item.mes).padStart(2, '0')}`);
+  const valoresMes = dadosPorMes.map(item => item.total);
+  const anoMesArray = dadosPorMes.map(item => ({ ano: item.ano, mes: item.mes }));
 
-const ctxMes = document.getElementById('graficoMes').getContext('2d');
-const chartMes = new Chart(ctxMes, {
-  type: 'bar',
-  data: {
-    labels: labelsMes,
-    datasets: [{
-      label: 'Total por Mês (R$)',
-      data: valoresMes,
-      backgroundColor: 'rgba(54, 162, 235, 0.7)'
-    }]
-  },
-  options: {
-    onClick: (e, elements) => {
-      if (elements.length > 0) {
-        const index = elements[0].index;
-        const { ano, mes } = anoMesArray[index];
-        window.location.href = `/detalhes?ano=${ano}&mes=${mes}`;
-      }
+  const ctxMes = document.getElementById('graficoMes').getContext('2d');
+  new Chart(ctxMes, {
+    type: 'bar',
+    data: {
+      labels: labelsMes,
+      datasets: [{
+        label: 'Total por Mês (R$)',
+        data: valoresMes,
+        backgroundColor: 'rgba(54, 162, 235, 0.7)',
+        borderColor: 'rgba(54, 162, 235, 1)',
+        borderWidth: 1
+      }]
     },
-    responsive: true,
-    scales: {
-      y: {
-        beginAtZero: true
+    options: {
+      responsive: true,
+      onClick: (event, elements) => {
+        if (elements.length > 0) {
+          const index = elements[0].index;
+          const { ano, mes } = anoMesArray[index];
+          window.location.href = `/detalhes?ano=${ano}&mes=${mes}`;
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true
+        }
       }
     }
-  }
-});
+  });
 
-const dadosPorTipo = {{ gastos_por_tipo | tojson }};
-const labelsTipo = dadosPorTipo.map(item => item.tipo);
-const valoresTipo = dadosPorTipo.map(item => item.total);
+  const dadosPorTipo = {{ gastos_por_tipo | tojson }};
+  const labelsTipo = dadosPorTipo.map(item => item.tipo);
+  const valoresTipo = dadosPorTipo.map(item => item.total);
 
-const ctxTipo = document.getElementById('graficoTipo').getContext('2d');
-new Chart(ctxTipo, {
-  type: 'pie',
-  data: {
-    labels: labelsTipo,
-    datasets: [{
-      data: valoresTipo,
-      backgroundColor: [
-        '#FF6384', '#36A2EB', '#FFCE56',
-        '#4BC0C0', '#9966FF', '#FF9F40'
-      ]
-    }]
-  },
-  options: {
-    responsive: true
-  }
-});
+  const ctxTipo = document.getElementById('graficoTipo').getContext('2d');
+  new Chart(ctxTipo, {
+    type: 'pie',
+    data: {
+      labels: labelsTipo,
+      datasets: [{
+        data: valoresTipo,
+        backgroundColor: [
+          '#FF6384', '#36A2EB', '#FFCE56',
+          '#4BC0C0', '#9966FF', '#FF9F40',
+          '#66BB6A', '#BA68C8', '#FF7043'
+        ]
+      }]
+    },
+    options: {
+      responsive: true
+    }
+  });
 </script>
 {% endblock %}

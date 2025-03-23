@@ -2,21 +2,65 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
-  <title>Controle Financeiro</title>
+  <title>FinanceApp</title>
+
+  <!-- Bootstrap 5 CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+
+  <style>
+    body {
+      background-color: #f8f9fa;
+    }
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+  </style>
 </head>
 <body>
-  <nav class="navbar navbar-expand-lg navbar-light bg-light px-4">
-    <a class="navbar-brand" href="/">💰 Controle Financeiro</a>
-    <div class="navbar-nav">
-      <a class="nav-link" href="/novo-gasto">Novo Gasto</a>
-      <a class="nav-link" href="/cadastrar-cartao">Cadastrar Cartão</a>
-      <a class="nav-link" href="/cadastrar-tipo">Cadastrar Tipo</a>
-      <a class="nav-link" href="/analise">📊 Análise</a>
+
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+    <div class="container">
+      <a class="navbar-brand" href="/">
+        <i class="bi bi-cash-coin"></i> FinanceApp
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarContent">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="/"><i class="bi bi-bar-chart-fill"></i> Análise</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/gastos"><i class="bi bi-card-list"></i> Gastos</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/novo-gasto"><i class="bi bi-plus-circle"></i> Novo Gasto</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/cadastrar-cartao"><i class="bi bi-credit-card-2-front"></i> Cartões</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/cadastrar-tipo"><i class="bi bi-tags"></i> Tipos</a>
+          </li>
+        </ul>
+      </div>
     </div>
   </nav>
-  <div class="container mt-4">
+
+  <!-- Conteúdo -->
+  <div class="container">
     {% block content %}{% endblock %}
   </div>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
