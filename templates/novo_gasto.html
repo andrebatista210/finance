@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Novo Gasto</h2>
+<form method="post">
+  <div class="mb-3">
+    <label>Tipo</label>
+    <select name="tipo" class="form-control">
+      {% for tipo in tipos %}
+      <option value="{{ tipo.id }}">{{ tipo.nome }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="mb-3">
+    <label>Valor</label>
+    <input type="number" step="0.01" name="valor" class="form-control" required>
+  </div>
+  <div class="mb-3">
+    <label>Categoria</label>
+    <select name="categoria" class="form-control" onchange="toggleCartao(this.value)">
+      <option value="Dinheiro">Dinheiro</option>
+      <option value="Cartao">Cartão</option>
+    </select>
+  </div>
+  <div class="mb-3" id="cartao-select" style="display: none;">
+    <label>Cartão</label>
+    <select name="cartao" class="form-control">
+      {% for c in cartoes %}
+      <option value="{{ c.id }}">{{ c.nome }} ({{ c.bandeira }})</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="mb-3">
+    <label>Data</label>
+    <input type="date" name="data" class="form-control" required>
+  </div>
+  <div class="mb-3">
+    <label>Parcelas</label>
+    <input type="number" name="parcelas" class="form-control" value="1" min="1">
+  </div>
+  <button type="submit" class="btn btn-success">Registrar</button>
+</form>
+
+<script>
+function toggleCartao(value) {
+  document.getElementById('cartao-select').style.display = value === 'Cartao' ? 'block' : 'none';
+}
+</script>
+{% endblock %}

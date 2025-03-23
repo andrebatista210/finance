@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Gastos</h2>
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>Data</th>
+      <th>Tipo</th>
+      <th>Valor</th>
+      <th>Categoria</th>
+      <th>Parcela</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for g in gastos %}
+    <tr>
+      <td>{{ g.data.strftime('%d/%m/%Y') }}</td>
+      <td>{{ g.tipo.nome }}</td>
+      <td>R$ {{ '%.2f'|format(g.valor) }}</td>
+      <td>{{ g.categoria }}</td>
+      <td>{{ g.parcela }}/{{ g.total_parcelas }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

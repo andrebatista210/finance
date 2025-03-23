@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Cadastrar Tipo de Gasto</h2>
+<form method="post">
+  <div class="mb-3">
+    <label>Nome do Tipo</label>
+    <input type="text" name="nome" class="form-control" required>
+  </div>
+  <button type="submit" class="btn btn-primary">Salvar</button>
+</form>
+{% endblock %}

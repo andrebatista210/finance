@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Cadastrar Cartão</h2>
+<form method="post">
+  <div class="mb-3">
+    <label>Nome do Cartão</label>
+    <input type="text" name="nome" class="form-control" required>
+  </div>
+  <div class="mb-3">
+    <label>Bandeira</label>
+    <select name="bandeira" class="form-control">
+      <option>Visa</option>
+      <option>Mastercard</option>
+    </select>
+  </div>
+  <div class="mb-3">
+    <label>Limite</label>
+    <input type="number" step="0.01" name="limite" class="form-control" required>
+  </div>
+  <button type="submit" class="btn btn-primary">Salvar</button>
+</form>
+{% endblock %}
