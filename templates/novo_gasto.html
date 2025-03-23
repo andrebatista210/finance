@@ -2,6 +2,7 @@
 {% block content %}
 <h2>Novo Gasto</h2>
 <form method="post" onsubmit="return validarFormulario()">
+
   <div class="mb-3">
     <label for="tipo">Tipo</label>
     <select name="tipo" id="tipo" class="form-control" required>
@@ -25,18 +26,29 @@
     </select>
   </div>
 
+  <!-- Se cartão -->
   <div class="mb-3" id="cartao-select" style="display: none;">
     <label for="cartao">Cartão</label>
     <select name="cartao" id="cartao" class="form-control">
-      <option value="">-- Selecione um cartão --</option>
+      <option value="">-- Selecione o cartão --</option>
       {% for c in cartoes %}
       <option value="{{ c.id }}">{{ c.nome }} ({{ c.bandeira }})</option>
       {% endfor %}
     </select>
   </div>
 
+  <!-- Nova opção: fatura próxima -->
+  <div class="mb-3" id="mes-fatura" style="display: none;">
+    <div class="form-check">
+      <input type="checkbox" class="form-check-input" id="faturaProxima" name="fatura_proxima">
+      <label class="form-check-label" for="faturaProxima">
+        Esse gasto pertence à fatura do <strong>mês anterior</strong>?
+      </label>
+    </div>
+  </div>
+
   <div class="mb-3">
-    <label for="data">Data</label>
+    <label for="data">Data da Compra</label>
     <input type="date" name="data" id="data" class="form-control" required>
   </div>
 
@@ -45,10 +57,9 @@
     <input type="number" name="parcelas" id="parcelas" class="form-control" value="1" min="1" required>
   </div>
 
-  <!-- NOVO CAMPO: DESCRIÇÃO -->
   <div class="mb-3">
     <label for="descricao">Descrição</label>
-    <textarea name="descricao" id="descricao" class="form-control" rows="2" placeholder="Ex: Mercado, gasolina, entrega..."></textarea>
+    <textarea name="descricao" id="descricao" class="form-control" rows="2" placeholder="Ex: Compra no mercado, gasolina..."></textarea>
   </div>
 
   <button type="submit" class="btn btn-success">Registrar</button>
@@ -56,14 +67,16 @@
 
 <script>
 function toggleCartao(value) {
-  document.getElementById('cartao-select').style.display = value === 'Cartao' ? 'block' : 'none';
+  const show = value === 'Cartao';
+  document.getElementById('cartao-select').style.display = show ? 'block' : 'none';
+  document.getElementById('mes-fatura').style.display = show ? 'block' : 'none';
 }
 
 function validarFormulario() {
   const categoria = document.getElementById('categoria').value;
   const cartao = document.getElementById('cartao');
   if (categoria === 'Cartao' && !cartao.value) {
-    alert('Por favor, selecione o cartão usado na compra.');
+    alert('Por favor, selecione o cartão utilizado.');
     return false;
   }
   return true;
