@@ -40,6 +40,7 @@ def cadastrar_tipo():
     return render_template('cadastrar_tipo.html')
 
 @app.route('/novo-gasto', methods=['GET', 'POST'])
+@app.route('/novo-gasto', methods=['GET', 'POST'])
 def novo_gasto():
     cartoes = Cartao.query.all()
     tipos = TipoGasto.query.all()
@@ -48,9 +49,13 @@ def novo_gasto():
         tipo_id = int(request.form['tipo'])
         valor = float(request.form['valor'])
         categoria = request.form['categoria']
-        cartao_id = int(request.form['cartao']) if 'cartao' in request.form and request.form['cartao'] else None
         data = datetime.strptime(request.form['data'], '%Y-%m-%d')
         parcelas = int(request.form.get('parcelas', 1))
+
+        # Captura o cartao_id apenas se categoria for 'Cartao'
+        cartao_id = None
+        if categoria == 'Cartao':
+            cartao_id = int(request.form['cartao'])
 
         valor_parcela = valor / parcelas
         for i in range(parcelas):
@@ -59,7 +64,7 @@ def novo_gasto():
                 tipo_id=tipo_id,
                 valor=valor_parcela,
                 categoria=categoria,
-                cartao_id=cartao_id if categoria == 'Cartao' else None,
+                cartao_id=cartao_id,
                 data=data_parcela,
                 parcela=i + 1,
                 total_parcelas=parcelas
